@@ -32,7 +32,8 @@ class StudentService {
    */
   addStudent(name, age, group) {
     if (!name || typeof name !== 'string') throw new TypeError('Invalid name');
-    if (!Number.isFinite(age)) throw new TypeError('Invalid age');
+    if (age <= 0) throw new TypeError('Age must be positive');
+    if (!Number.isInteger(age)) throw new TypeError('Age must be an integer');
 
     const id = String(Date.now());
     const student = new Student(id, name, Number(age), group);
@@ -150,7 +151,7 @@ class StudentService {
       const name = String(item.name);
       const age = Number(item.age);
 
-      if (!Number.isFinite(age)) {
+      if (!Number.isFinite(age) || age <= 0 || !Number.isInteger(age)) {
         this.logger.log('Skipping entry with invalid age:', item);
         continue;
       }
