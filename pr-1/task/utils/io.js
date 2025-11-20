@@ -1,24 +1,31 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 
 /**
- * Write data to JSON file.
+ * Write data to JSON file asynchronously.
  * @param {any} data
  * @param {string} filePath
+ * @returns {Promise<void>}
  */
-function saveToJSON(data, filePath) {
+async function saveToJSON(data, filePath) {
   const json = JSON.stringify(data, null, 2);
-  fs.writeFileSync(filePath, json, 'utf8');
+  await fs.writeFile(filePath, json, 'utf8');
 }
 
 /**
- * Read JSON or return null if file does not exist.
+ * Read JSON file asynchronously or return null if file does not exist.
  * @param {string} filePath
- * @returns {any|null}
+ * @returns {Promise<any|null>}
  */
-function loadJSON(filePath) {
-  if (!fs.existsSync(filePath)) return null;
-  const raw = fs.readFileSync(filePath, 'utf8');
-  return JSON.parse(raw);
+async function loadJSON(filePath) {
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(raw);
+  } catch (err) {
+    if (err && err.code === 'ENOENT') {
+      return null;
+    }
+    throw err;
+  }
 }
 
 module.exports = { saveToJSON, loadJSON };

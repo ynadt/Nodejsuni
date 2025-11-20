@@ -1,17 +1,25 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
+const EventEmitter = require('events');
 const Student = require('../models/student');
 const { saveToJSON, loadJSON } = require('../utils/io');
 
 /**
  * Service that manages Student entities: creating, removing, filtering,
  * and persisting them to a JSON file.
+ *
+ * Emits events:
+ * - 'student:added'   (student)
+ * - 'student:removed' (student)
+ * - 'students:loaded' ({ count, filePath })
+ * - 'students:saved'  ({ count, filePath })
  */
-class StudentService {
+class StudentService extends EventEmitter {
   /**
-   * @param {object} logger - Logger instance with a `.log()` method.
+   * @param {object} logger Logger instance with a `.log()` method.
    */
   constructor(logger) {
+    super();
     if (!logger) {
       throw new Error('Logger instance required');
     }
@@ -19,9 +27,7 @@ class StudentService {
     this.students = [];
   }
 
-  // -------------------------------------------------------------
   // CRUD OPERATIONS
-  // -------------------------------------------------------------
 
   /**
    * Add a new student to the list.
@@ -32,14 +38,16 @@ class StudentService {
    */
   addStudent(name, age, group) {
     if (!name || typeof name !== 'string') throw new TypeError('Invalid name');
-    if (age <= 0) throw new TypeError('Age must be positive');
-    if (!Number.isInteger(age)) throw new TypeError('Age must be an integer');
+    if (typeof age !== 'number' || !Number.isInteger(age) || age <= 0) {
+      throw new TypeError('Age must be a positive integer');
+    }
 
     const id = String(Date.now());
     const student = new Student(id, name, Number(age), group);
 
     this.students.push(student);
     this.logger.log(`Added student: ${student.name} (${student.id})`);
+    this.emit('student:added', student);
 
     return student;
   }
@@ -58,6 +66,8 @@ class StudentService {
 
     const removed = this.students.splice(idx, 1)[0];
     this.logger.log(`Removed student: ${removed.name} (${removed.id})`);
+    this.emit('student:removed', removed);
+
     return true;
   }
 
@@ -97,19 +107,16 @@ class StudentService {
     return sum / this.students.length;
   }
 
-  // -------------------------------------------------------------
-  // FILE OPERATIONS
-  // -------------------------------------------------------------
+  // FILE OPERATIONS (ASYNC)
 
   /**
-   * Save the current list of students to a JSON file.
+   * Save the current list of students to a JSON file asynchronously.
    * @param {string} filePath
+   * @returns {Promise<void>}
    */
-  saveToFile(filePath) {
+  async saveToFile(filePath) {
     const dir = path.dirname(filePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
+    await fs.mkdir(dir, { recursive: true });
 
     const plainList = this.students.map(s => ({
       id: s.id,
@@ -118,17 +125,18 @@ class StudentService {
       group: s.group,
     }));
 
-    saveToJSON(plainList, filePath);
+    await saveToJSON(plainList, filePath);
     this.logger.log(`Saved ${plainList.length} students to ${filePath}`);
+    this.emit('students:saved', { count: plainList.length, filePath });
   }
 
   /**
    * Load students from a JSON file and replace the current list.
    * @param {string} filePath
-   * @returns {boolean} false if file does not exist, true otherwise
+   * @returns {Promise<boolean>} false if file does not exist, true otherwise
    */
-  loadFromFile(filePath) {
-    const raw = loadJSON(filePath);
+  async loadFromFile(filePath) {
+    const raw = await loadJSON(filePath);
     if (!raw) {
       this.logger.log(`File not found: ${filePath}`);
       return false;
@@ -161,6 +169,8 @@ class StudentService {
     }
 
     this.logger.log(`Loaded ${count} students from ${filePath}`);
+    this.emit('students:loaded', { count, filePath });
+
     return true;
   }
 }
