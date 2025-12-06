@@ -1,10 +1,11 @@
 {
-  "name": "Practice 1 Node.js Basics",
+  "name": "Node.js Practice",
   "version": "1.0.0",
   "description": "In this Practical Task you will work with pure Node.js without any frameworks and external libraries.",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "start": "node index.js",
+    "test": "echo \"No tests specified\" && exit 0"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/ynadt/Nodejsuni/issues"
   },
-  "homepage": "https://github.com/ynadt/Nodejsuni#readme"
+  "homepage": "https://github.com/ynadt/Nodejsuni#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
 }

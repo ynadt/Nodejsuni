@@ -9,10 +9,12 @@ const { saveToJSON, loadJSON } = require('../utils/io');
  * and persisting them to a JSON file.
  *
  * Emits events:
- * - 'student:added'   (student)
- * - 'student:removed' (student)
- * - 'students:loaded' ({ count, filePath })
- * - 'students:saved'  ({ count, filePath })
+ * - 'student:added'    (student)
+ * - 'student:removed'  (student)
+ * - 'student:updated'  (student)
+ * - 'students:loaded'  ({ count, filePath })
+ * - 'students:saved'   ({ count, filePath })
+ * - 'students:replaced'({ count })
  */
 class StudentService extends EventEmitter {
   /**
@@ -69,6 +71,77 @@ class StudentService extends EventEmitter {
     this.emit('student:removed', removed);
 
     return true;
+  }
+
+  /**
+   * Update existing student by ID.
+   * @param {string} id
+   * @param {{ name?: string, age?: number, group?: string|number }} updates
+   * @returns {Student|null}
+   */
+  updateStudent(id, updates) {
+    const student = this.getStudentById(id);
+    if (!student) return null;
+
+    if (Object.prototype.hasOwnProperty.call(updates, 'name')) {
+      const name = updates.name;
+      if (!name || typeof name !== 'string') {
+        throw new TypeError('Invalid name');
+      }
+      student.name = name;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(updates, 'age')) {
+      const age = updates.age;
+      if (typeof age !== 'number' || !Number.isInteger(age) || age <= 0) {
+        throw new TypeError('Age must be a positive integer');
+      }
+      student.age = age;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(updates, 'group')) {
+      student.group = updates.group;
+    }
+
+    this.logger.log(`Updated student: ${student.name} (${student.id})`);
+    this.emit('student:updated', student);
+
+    return student;
+  }
+
+  /**
+   * Replace whole students collection with a new one.
+   * @param {Array<{ id?: string, name: string, age: number, group: string|number }>} studentsData
+   * @returns {Student[]}
+   */
+  replaceAllStudents(studentsData) {
+    if (!Array.isArray(studentsData)) {
+      throw new TypeError('studentsData must be an array');
+    }
+
+    const newList = [];
+
+    for (const item of studentsData) {
+      if (!item || !item.name) {
+        throw new TypeError('Each student must have a name');
+      }
+      if (typeof item.age !== 'number' || !Number.isInteger(item.age) || item.age <= 0) {
+        throw new TypeError('Age must be a positive integer');
+      }
+
+      const id = item.id ? String(item.id) : String(Date.now() + Math.random());
+      const name = String(item.name);
+      const age = Number(item.age);
+      const group = item.group;
+
+      newList.push(new Student(id, name, age, group));
+    }
+
+    this.students = newList;
+    this.logger.log(`Replaced students collection with ${newList.length} students`);
+    this.emit('students:replaced', { count: newList.length });
+
+    return this.getAllStudents();
   }
 
   /**
