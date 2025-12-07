@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>About This Server</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background: #fafafa;
+    }
+    h1 {
+      color: #333;
+    }
+    p {
+      font-size: 18px;
+      line-height: 1.6;
+    }
+    .box {
+      margin-top: 20px;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+  </style>
+  <link rel="stylesheet" href="/styles.css">
+
+</head>
+<body>
+<h1>About This Simple Node.js Server</h1>
+
+<div class="box">
+  <p>This page is returned from a local HTML file.</p>
+  <p>My Node.js server reads this file from the filesystem and sends it when someone opens <strong>http://localhost:3000/</strong>.</p>
+  <p>There is no Express.js here — this is a pure, minimal HTTP server.</p>
+</div>
+
+<div class="box">
+  <p>Features of this server:</p>
+  <ul>
+    <li>Handles HTTP requests manually</li>
+    <li>Returns HTML files</li>
+    <li>Uses Node's built-in fs module</li>
+    <li>Supports further extension (static files, routing)</li>
+  </ul>
+</div>
+</body>
+</html>
