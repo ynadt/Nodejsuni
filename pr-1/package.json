@@ -1,5 +1,5 @@
 {
-  "name": "Node.js Practice",
+  "name": "Node js Practice",
   "version": "1.0.0",
   "description": "In this Practical Task you will work with pure Node.js without any frameworks and external libraries.",
   "main": "index.js",
@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/ynadt/Nodejsuni#readme",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^5.2.1"
   }
 }
